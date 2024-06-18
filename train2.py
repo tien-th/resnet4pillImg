@@ -5,14 +5,31 @@ from torch.utils.data import DataLoader
 from torchvision.models import resnet101
 import torch.optim as optim
 import torch.nn as nn
-import numpy as np
-from sklearn.model_selection import StratifiedKFold
+
+import torch.nn.functional as F
 
 
 num_models = 1
 batch_size = 64 
 log_file = 'log_5_fold.txt'
+
+
+class Crop10Percent(object):
+    def __call__(self, img):
+        width, height = img.size
+        crop_size = (int(height * 0.8), int(width * 0.8))
+        top = (height - crop_size[0]) // 2
+        left = (width - crop_size[1]) // 2
+        
+        print(top, left, crop_size[0], crop_size[1])
+        return F.crop(img, top, left, crop_size[0], crop_size[1])
+
+    def __repr__(self):
+        return self.__class__.__name__ + '()'
+
 transform = transforms.Compose([
+    Crop10Percent(),
+    transforms.Resize((256, 256)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
