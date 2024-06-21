@@ -16,16 +16,23 @@ from sklearn.model_selection import StratifiedKFold
 #     subset = torch.utils.data.Subset(dataset, subset_indices)
 #     dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, num_workers=4)
 #     return dataloader
+import os 
+root_dir = '512_5_14'
+# make dir if not exist
+if not os.path.exists(root_dir):
+    os.makedirs(root_dir)
+
 model_nths = range(6,15)
 batch_size = 64 
-log_file = 'log_5_fold.txt'
+log_file = 'log.txt'
+log_file = os.path.join(root_dir, log_file)
+
 transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
 # Load your dataset
-test_dataset = dataset.CustomImageDataset(annotations_file='public/labels.txt', img_dir='public/images', transform=transform)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def ensemble_predict(models, dataloader):
@@ -67,7 +74,7 @@ def train_model(model, dataloader, criterion, optimizer, num_epochs=30, model_fo
     model.train()
     with open(log_file, 'a') as f:
                 f.write(f'\n------------------------------------------------------------------------------------\n')
-    # test_dataset = dataset.CustomImageDataset(annotations_file= f'training/fold{model_fold}_test.txt', img_dir='training/images', transform=transform)
+    test_dataset = dataset.CustomImageDataset(annotations_file= f'training/fold{model_fold}_test.txt', img_dir='training/images', transform=transform)
     for epoch in range(num_epochs):
         for inputs, labels in dataloader:
             inputs, labels = inputs.to(device), labels.to(device)
@@ -105,6 +112,6 @@ for i in model_nths :
     train_model(model, dataloader, criterion, optimizer, num_epochs=40, model_fold=i)
 
     # Save model to disk
-    torch.save(model.state_dict(), f'resnet101_model_{i}.pth')
+    torch.save(model.state_dict(), root_dir + f'/resnet101_model_{i}.pth')
     models.append(model)
 

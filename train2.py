@@ -6,13 +6,18 @@ from torchvision.models import resnet101
 import torch.optim as optim
 import torch.nn as nn
 
-import torch.nn.functional as F
+from torchvision.transforms import functional as F
 
+num_models = 2
+import os 
+root_dir = 'crop_512'
+# make dir if not exist
+if not os.path.exists(root_dir):
+    os.makedirs(root_dir)
 
-num_models = 1
 batch_size = 64 
-log_file = 'log_5_fold.txt'
-
+log_file = 'log.txt'
+log_file = os.path.join(root_dir, log_file)
 
 class Crop10Percent(object):
     def __call__(self, img):
@@ -21,7 +26,7 @@ class Crop10Percent(object):
         top = (height - crop_size[0]) // 2
         left = (width - crop_size[1]) // 2
         
-        print(top, left, crop_size[0], crop_size[1])
+        # print(top, left, crop_size[0], crop_size[1])
         return F.crop(img, top, left, crop_size[0], crop_size[1])
 
     def __repr__(self):
@@ -29,13 +34,12 @@ class Crop10Percent(object):
 
 transform = transforms.Compose([
     Crop10Percent(),
-    transforms.Resize((256, 256)),
+    transforms.Resize((512, 512)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
 # Load your dataset
-# test_dataset = dataset.CustomImageDataset(annotations_file='public/labels.txt', img_dir='public/images', transform=transform)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def ensemble_predict(models, dataloader):
@@ -115,6 +119,6 @@ for i in range(num_models):
     train_model(model, dataloader, criterion, optimizer, num_epochs=40, model_fold=i)
 
     # Save model to disk
-    torch.save(model.state_dict(), f'resnet101_model_{i}.pth')
+    torch.save(model.state_dict(), root_dir + f'/resnet101_model_{i}.pth')
     models.append(model)
 

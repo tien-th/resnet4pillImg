@@ -72,23 +72,26 @@ def save_predictions_to_file(predictions, img_names, output_file):
             f.write(f"{img_name} {predicted_class.item()}\n")
 
 # Example usage
-img_dir = '/home/PET-CT/tiennh/IOAI/public/images'
+img_dir = 'private/images'
 
-num_imgs = len(os.listdir('/home/PET-CT/tiennh/IOAI/public/images'))
+num_imgs = len(os.listdir(img_dir))
 
 img_list = [str(x) + '.jpg' for x in range(num_imgs) ]  # Your list of image file names
 dataset = ImageListDataset(img_list, img_dir, transform=transform)
 dataloader = DataLoader(dataset, batch_size=32, shuffle=False)
 
+root_dir = '512_5_14' 
 models = []
-for i in range(5): 
-    model = resnet101(pretrained=True)
-    model.fc = nn.Linear(model.fc.in_features, 100)  # Adjust for 100 classes
-    model.load_state_dict(torch.load(f'resnet101_model_{i}.pth'))
-    models.append(model)
-
+for i in range(15): 
+    try:
+        model = resnet101(pretrained=True)
+        model.fc = nn.Linear(model.fc.in_features, 100)  # Adjust for 100 classes
+        model.load_state_dict(torch.load( root_dir + f'/resnet101_model_{i}.pth'))
+        models.append(model)
+    except: 
+        continue
 
 # Assuming 'models' is a list of your trained models
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 all_predictions, all_img_names = ensemble_predict(models, dataloader)
-save_predictions_to_file(all_predictions, all_img_names, 'prediction.txt')
+save_predictions_to_file(all_predictions, all_img_names, 'predictions.txt')
