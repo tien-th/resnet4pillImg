@@ -20,12 +20,12 @@ def make_dir(dir):
 #     dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, num_workers=4)
 #     return dataloader
 import os 
-root_dir = 'final_1'
+root_dir = 'final_2_train_tiep'
 # make dir if not exist
 if not os.path.exists(root_dir):
     os.makedirs(root_dir)
 
-model_nths = range(0,10)
+model_nths = [0]
 batch_size = 64 
 train_log_dir = 'train_log'
 train_log_dir = os.path.join(root_dir, train_log_dir)
@@ -143,10 +143,11 @@ def train_model(model, dataloader, criterion, optimizer, num_epochs=40, model_fo
 for i in model_nths :
     model = resnet101(weights=ResNet101_Weights.DEFAULT)
     model.fc = nn.Linear(model.fc.in_features, 150)  # Adjust for 150 classes
+    model.load_state_dict(torch.load(os.path.join(root_dir, f'resnet101_model_{i}.pth')))
     # model.load_state_dict(torch.load('resnet101_model_0.pth'))
     model.to(device)
 
-    optimizer = optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = optim.Adam(model.parameters(), lr=0.00001)
     criterion = nn.CrossEntropyLoss()
 
     # Get a unique DataLoader for each model
@@ -154,8 +155,10 @@ for i in model_nths :
     train_dataset = dataset.CustomImageDataset(annotations_file=os.path.join(root_dir, f'fold{i}_train.txt'), img_dir='final_train/images', transform=transform)
     dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
     print(f"Training model {i}") 
-    train_model(model, dataloader, criterion, optimizer, num_epochs=40, model_fold=i)
+    train_model(model, dataloader, criterion, optimizer, num_epochs=30, model_fold=i)
 
+    
+    
     # Save model to disk
     torch.save(model.state_dict(), root_dir + f'/resnet101_model_{i}.pth')
     # clear cache

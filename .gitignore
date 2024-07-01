@@ -1,6 +1,12 @@
-training/
+training_so_khao/
 weight/
 prediction.txt
 public/
 512_5_14/
-predictions.txt
+./predictions.txt
+final_1/
+final_2_train_tiep/
+final_train/
+final_test/
+./predictions.txt
+
