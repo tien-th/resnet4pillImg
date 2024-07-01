@@ -9,4 +9,6 @@ final_2_train_tiep/
 final_train/
 final_test/
 ./predictions.txt
+./train7.py
+
 
